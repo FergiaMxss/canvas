@@ -1819,6 +1819,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _modules_forms__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/forms */ "./src/js/modules/forms.js");
 /* harmony import */ var _modules_mask__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/mask */ "./src/js/modules/mask.js");
 /* harmony import */ var _modules_checkTextinputs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/checkTextinputs */ "./src/js/modules/checkTextinputs.js");
+/* harmony import */ var _modules_showMoreStyles__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/showMoreStyles */ "./src/js/modules/showMoreStyles.js");
+
 
 
 
@@ -1834,6 +1836,7 @@ window.addEventListener('DOMContentLoaded', () => {
   Object(_modules_mask__WEBPACK_IMPORTED_MODULE_3__["default"])('[name="phone"]');
   Object(_modules_checkTextinputs__WEBPACK_IMPORTED_MODULE_4__["default"])('[name="name"]');
   Object(_modules_checkTextinputs__WEBPACK_IMPORTED_MODULE_4__["default"])('[name="message"]');
+  Object(_modules_showMoreStyles__WEBPACK_IMPORTED_MODULE_5__["default"])('.button-styles', '#styles .row');
 });
 
 /***/ }),
@@ -1875,9 +1878,11 @@ const checkTextinputs = selector => {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var core_js_modules_es_promise_finally__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.promise.finally */ "./node_modules/core-js/modules/es.promise.finally.js");
 /* harmony import */ var core_js_modules_es_promise_finally__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_promise_finally__WEBPACK_IMPORTED_MODULE_0__);
-
+/* harmony import */ var _services_requests__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services/requests */ "./src/js/services/requests.js");
 
 // import checkNumInputs from './checkNumInputs';
+
+
 const forms = () => {
   const form = document.querySelectorAll('form'),
         inputs = document.querySelectorAll('input'),
@@ -1894,14 +1899,6 @@ const forms = () => {
   const path = {
     designer: 'assets/server.php',
     question: 'assets/question.php'
-  };
-
-  const postData = async (url, data) => {
-    let res = await fetch(url, {
-      method: "POST",
-      body: data
-    });
-    return await res.text();
   };
 
   const clearInputs = () => {
@@ -1944,7 +1941,7 @@ const forms = () => {
       let api;
       item.closest('popup-design') || item.classList.contains('calc_form') ? api = path.designer : api = path.question;
       console.log(api);
-      postData(api, formData).then(res => {
+      Object(_services_requests__WEBPACK_IMPORTED_MODULE_1__["postData"])(api, formData).then(res => {
         console.log(res);
         statusImg.setAttribute('src', message.ok);
         textMessage.textContent = message.success;
@@ -2138,6 +2135,59 @@ const modals = () => {
 
 /***/ }),
 
+/***/ "./src/js/modules/showMoreStyles.js":
+/*!******************************************!*\
+  !*** ./src/js/modules/showMoreStyles.js ***!
+  \******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _services_requests__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../services/requests */ "./src/js/services/requests.js");
+
+
+const showMoreStyles = (trigger, wrapper) => {
+  const btn = document.querySelector(trigger); // cards.forEach(card => {
+  //     card.classList.add('animated', 'fadeInUp');
+  // });
+  // btn.addEventListener('click', () => {
+  //     cards.forEach(card => {
+  //         card.classList.remove('hidden-lg', 'hidden-md', 'hidden-sm', 'hidden-xs');
+  //         card.classList.add('col-sm-3', 'col-sm-offset-0', 'col-xs-10', 'col-xs-offset-1');
+  //     });
+  //     btn.remove();
+  // });
+
+  btn.addEventListener('click', function () {
+    Object(_services_requests__WEBPACK_IMPORTED_MODULE_0__["getResourse"])('http://localhost:3000/styles').then(res => createCards(res)).catch(error => console.log(error));
+    this.remove();
+  });
+
+  function createCards(response) {
+    response.forEach(({
+      src,
+      title,
+      link
+    }) => {
+      let card = document.createElement('div');
+      card.classList.add('animated', 'fadeInUp', 'col-sm-3', 'col-sm-offset-0', 'col-xs-10', 'col-xs-offset-1');
+      card.innerHTML = `
+            <div class="styles-block">
+                <img src=${src} alt="style">
+                <h4>${title}</h4>
+                <a href=${link}>Подробнее</a>
+            </div>
+            `;
+      document.querySelector(wrapper).appendChild(card);
+    });
+  }
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (showMoreStyles);
+
+/***/ }),
+
 /***/ "./src/js/modules/sliders.js":
 /*!***********************************!*\
   !*** ./src/js/modules/sliders.js ***!
@@ -2214,6 +2264,39 @@ const sliders = (slides, dir, prev, next) => {
 };
 
 /* harmony default export */ __webpack_exports__["default"] = (sliders);
+
+/***/ }),
+
+/***/ "./src/js/services/requests.js":
+/*!*************************************!*\
+  !*** ./src/js/services/requests.js ***!
+  \*************************************/
+/*! exports provided: postData, getResourse */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "postData", function() { return postData; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getResourse", function() { return getResourse; });
+const postData = async (url, data) => {
+  let res = await fetch(url, {
+    method: "POST",
+    body: data
+  });
+  return await res.text();
+};
+
+const getResourse = async url => {
+  let res = await fetch(url);
+
+  if (!res.ok) {
+    throw new Error(`Could not fetch ${url}, status: ${res.status}`);
+  }
+
+  return await res.json();
+};
+
+
 
 /***/ })
 
